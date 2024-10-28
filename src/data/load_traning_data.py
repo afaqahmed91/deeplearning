@@ -49,3 +49,19 @@ def combine(data: Dict[str, pd.DataFrame]):
     combined_df = combined_df.bfill(axis=1)
     combined_df = combined_df.asfreq("h")
     return combined_df
+
+
+def preprocess(data: pd.DataFrame):
+    hwl_sensor_columns = [c for c in data.columns if "HW" in c and "sensor" in c]
+    hwl_pump_columns = [c for c in data.columns if "HW" in c and "pump" in c]
+    ahu_sensor_columns = [c for c in data.columns if "AHU" in c and "sensor" not in c]
+    ahu_fan_columns = [c for c in data.columns if "AHU" in c and "fan" in c]
+    data = data.assign(
+        HWL_Value=lambda x: x[hwl_sensor_columns].mean(axis=1)
+        * x[hwl_pump_columns].mean(axis=1)
+    )
+    data = data.assign(
+        AHU_Value=lambda x: x[ahu_sensor_columns].mean(axis=1)
+        * x[ahu_fan_columns].mean(axis=1)
+    )
+    return data
